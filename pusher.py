@@ -45,11 +45,11 @@ def prometheus_add(name_metric, dict_labels, registry=None, value=None):
 def main():
     parser = argparse.ArgumentParser(description='Send a crawling notification')
     parser.add_argument('--addr-gateway', '-a', type=str,
-                        help='addr push gateway')
+                        help='addr push gateway', required=True)
     parser.add_argument('--name-metric', '-n', type=str,
-                        help='name metrics')
+                        help='name metrics', required=True)
     parser.add_argument('--name-job', '-N', type=str,
-                        help='name metrics')
+                        help='name metrics', required=True)
     parser.add_argument('--source', '-s', default=None, type=str)
     parser.add_argument('--block', '-b', default=None, type=str)
     parser.add_argument('--family', '-f', default=None, type=str)

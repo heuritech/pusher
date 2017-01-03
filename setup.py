@@ -7,4 +7,11 @@ setup(name='pusher',
       author_email='info@heuritech.com',
       license='private',
       py_modules=['pusher'],
+      scripts=["pusher.py"],
+      entry_points={
+          'console_scripts': [
+              'pusher = pusher:main'
+          ]
+      },
+      install_requires=["prometheus_client>=0.0.18"],
       zip_safe=True)
