@@ -1,10 +1,44 @@
 #!/usr/bin/python3
 
+import os
+import argparse
+import requests
 from prometheus_client import CollectorRegistry, Gauge, Counter, pushadd_to_gateway
 from prometheus_client.parser import text_string_to_metric_families
 from operator import itemgetter
-import argparse
-import requests
+
+def send_info(addr_gateway, name_job, name_metric, source=None, block=None, family=None, value=None, add=None):
+    """
+    @addr_gateway : 'http://gateway:9090' could be set on environ['PROMETHEUS_HOST']
+    @name_job : name of your job, add environ['HOST'] at end
+    @name_metric : name of your metric
+    @source/block/family : Label value of your metric
+    @value : Set the value of your metric
+    @add : Get the metric on @addr_gateway and add '@add' (@value not used, overight by the value on @addr_gateway)
+    """
+    if "HOST" in os.environ:
+        name_job += "_" + os.environ["HOST"]
+    if addr_gateway == None and "PROMETHEUS_HOST" in os.environ:
+        addr_gateway = os.environ["PROMETHEUS_HOST"]
+
+    if addr_gateway == None:
+        return
+    try:
+        dict_labels = {
+            "source": source,
+            "block": block,
+            "family": family
+        }
+        dict_labels = {k: v for k, v in dict_labels.items() if v}
+        if add is not None:
+            value , _ = prometheus_get(addr_gateway, name_metric, name_job)
+            value += add
+        registry = prometheus_add(name_metric, dict_labels, value=value)
+        prometheus_push(addr_gateway, name_job, registry)
+    except Exception as e:
+        print_log("ERROR", "%s" % str(e))
+        print_log("ERROR", "Send[%s]: %s" % (name_job, addr_gateway))
+        print_log("ERROR", "Metric[%s]: %s with labels %s" % (name_metric, str(value), str(dict_labels)))
 
 def prometheus_get(addr_gateway, name_metrics, job, data=None):
     addr = addr_gateway + "/metrics"
