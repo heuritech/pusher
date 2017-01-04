@@ -31,7 +31,7 @@ def prometheus_add(name_metric, dict_labels, registry=None, value=None):
     if len(keys) > 0:
         g = Gauge(name_metric, name_metric, dict_labels.keys(), registry=registry)
         if value is not None:
-            g.set(value)
+            g.labels(**dict_labels).set(value)
         else:
             g.labels(**dict_labels).set_to_current_time()
     else:
