@@ -32,11 +32,9 @@ def send_info(addr_gateway, name_job, name_metric, source=None, block=None, fami
         }
         dict_labels = {k: v for k, v in dict_labels.items() if v}
         if add is not None:
-            registry = prometheus_add(name_metric, dict_labels, add=add)
-#            value , _ = prometheus_get(addr_gateway, name_metric, name_job)
-#            value += add
-        else:
-            registry = prometheus_add(name_metric, dict_labels, value=value)
+            value , _ = prometheus_get(addr_gateway, name_metric, name_job)
+            value += add
+        registry = prometheus_add(name_metric, dict_labels, value=value)
         prometheus_push(addr_gateway, name_job, registry)
     except Exception as e:
         logging.error("%s" % str(e))
@@ -61,7 +59,7 @@ def prometheus_get(addr_gateway, name_metrics, job, data=None):
 def prometheus_push(addr_gateway, name_job, registry):
     pushadd_to_gateway(addr_gateway, job=name_job, registry=registry)
 
-def prometheus_add(name_metric, dict_labels, registry=None, value=None, add=None):
+def prometheus_add(name_metric, dict_labels, registry=None, value=None):
     if registry == None:
         registry = CollectorRegistry()
     keys = dict_labels.keys()
@@ -69,8 +67,6 @@ def prometheus_add(name_metric, dict_labels, registry=None, value=None, add=None
         g = Gauge(name_metric, name_metric, dict_labels.keys(), registry=registry)
         if value is not None:
             g.labels(**dict_labels).set(value)
-        elif add is not None:
-            g.labels(**dict_labels).inc(value)
         else:
             g.labels(**dict_labels).set_to_current_time()
     else:
@@ -104,11 +100,9 @@ def main():
     dict_labels = {k: v for k, v in dict_labels.items() if v}
     value = args.set
     if args.add is not None:
-        registry=prometheus_add(args.name_metric, dict_labels, add=args.add)
-#        value , _ = prometheus_get(args.addr_gateway, args.name_metric, args.name_job)
-#        value += args.add
-    else:
-        registry=prometheus_add(args.name_metric, dict_labels, value=value)
+        value , _ = prometheus_get(args.addr_gateway, args.name_metric, args.name_job)
+        value += args.add
+    registry=prometheus_add(args.name_metric, dict_labels, value=value)
     prometheus_push(args.addr_gateway, args.name_job, registry)
 
 if __name__ == "__main__":
