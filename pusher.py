@@ -4,7 +4,7 @@ import os
 import argparse
 import requests
 import logging
-from prometheus_client import CollectorRegistry, Gauge, Counter, pushadd_to_gateway
+from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
 from prometheus_client.parser import text_string_to_metric_families
 from operator import itemgetter
 
@@ -32,28 +32,28 @@ def send_info(addr_gateway, name_job, name_metric, source=None, block=None, fami
         }
         dict_labels = {k: v for k, v in dict_labels.items() if v}
         if add is not None:
-            value , _ = prometheus_get(addr_gateway, name_metric, name_job)
+            value, _ = prometheus_get(addr_gateway, name_metric, name_job)
             value += add
         registry = prometheus_add(name_metric, dict_labels, value=value)
         prometheus_push(addr_gateway, name_job, registry)
     except Exception as e:
-        logging.error("%s" % str(e))
-        logging.error("Send[%s]: %s" % (name_job, addr_gateway))
-        logging.error("Metric[%s]: %s with labels %s" % (name_metric, str(value), str(dict_labels)))
+        logging.error("{0}".format(str(e)))
+        logging.error("Send[{0}]: {1}".format(name_job, addr_gateway))
+        logging.error("Metric[{0}]: {1} with labels {2}".format(name_metric, str(value), str(dict_labels)))
 
 def prometheus_get(addr_gateway, name_metrics, job, data=None):
     addr = addr_gateway + "/metrics"
     if "http://" not in addr:
         addr = "http://" + addr
     if data == None:
-        data=requests.get(addr).content.decode()
+        data = requests.get(addr).content.decode()
     if data != None:
         for family in text_string_to_metric_families(data):
             for sample in family.samples:
                 if sample[0] == name_metrics and job in sample[1]["job"]:
                     return sample[2], data
     else:
-        print("Error with getting %s" % addr)
+        logging.error("Error with getting {0}".format(addr))
     return 0, data
 
 def prometheus_push(addr_gateway, name_job, registry):
@@ -90,7 +90,7 @@ def main():
     parser.add_argument('--family', '-f', default=None, type=str)
     parser.add_argument('--add', '-A', default=None, type=int)
     parser.add_argument('--set', '-S', default=None, type=int)
-    
+
     args = parser.parse_args()
     dict_labels = {
         "source": args.source,
@@ -100,9 +100,9 @@ def main():
     dict_labels = {k: v for k, v in dict_labels.items() if v}
     value = args.set
     if args.add is not None:
-        value , _ = prometheus_get(args.addr_gateway, args.name_metric, args.name_job)
+        value, _ = prometheus_get(args.addr_gateway, args.name_metric, args.name_job)
         value += args.add
-    registry=prometheus_add(args.name_metric, dict_labels, value=value)
+    registry = prometheus_add(args.name_metric, dict_labels, value=value)
     prometheus_push(args.addr_gateway, args.name_job, registry)
 
 if __name__ == "__main__":
