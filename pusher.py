@@ -4,6 +4,7 @@ import os
 import argparse
 import requests
 import logging
+from urllib.error import URLError
 from prometheus_client import CollectorRegistry, Gauge, pushadd_to_gateway
 from prometheus_client.parser import text_string_to_metric_families
 from operator import itemgetter
@@ -57,7 +58,10 @@ def prometheus_get(addr_gateway, name_metrics, job, data=None):
     return 0, data
 
 def prometheus_push(addr_gateway, name_job, registry):
-    pushadd_to_gateway(addr_gateway, job=name_job, registry=registry)
+    try:
+        pushadd_to_gateway(addr_gateway, job=name_job, registry=registry)
+    except URLError as e:
+        logging.error("[{0}] when sending metric: {1}".format(e.args, name_job))
 
 def prometheus_add(name_metric, dict_labels, registry=None, value=None):
     if registry == None:
