@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import re
 import argparse
 import requests
 import logging
@@ -10,6 +11,13 @@ from prometheus_client.parser import text_string_to_metric_families
 
 
 def main():
+    def clean_jobname(name_job):
+        return re.sub(
+            r'(\w+)_([0-9]+-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}-[0-9]+)_(\w+)',
+            r'\1_\3',
+            name_job
+        )
+
     parser = argparse.ArgumentParser(description='Send a crawling notification')
     parser.add_argument('--addr-gateway', '-a', type=str,
                         help='addr push gateway', required=True)
@@ -31,11 +39,12 @@ def main():
     }
     dict_labels = {k: v for k, v in dict_labels.items() if v}
     value = args.set
+    cleaned_jobname = clean_jobname(args.name_job)
     if args.add is not None:
-        value, _ = prometheus_get(args.addr_gateway, args.name_metric, args.name_job)
+        value, _ = prometheus_get(args.addr_gateway, args.name_metric, cleaned_jobname)
         value += args.add
     registry = prometheus_add(args.name_metric, dict_labels, value=value)
-    prometheus_push(args.addr_gateway, args.name_job, registry)
+    prometheus_push(args.addr_gateway, cleaned_jobname, registry)
 
 
 def prometheus_get(addr_gateway, name_metrics, job, data=None):

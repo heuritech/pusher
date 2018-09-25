@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='pusher',
-      version='0.2',
+      version='0.3',
       description='Metrics scripts for prometheus with labels',
       author='Heuritech',
       author_email='info@heuritech.com',
